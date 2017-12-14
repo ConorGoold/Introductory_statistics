@@ -1,0 +1,609 @@
+\documentclass{beamer}
+\setbeamertemplate{frametitle}
+  {%\begin{centering}
+  \smallskip
+   \insertframetitle\par
+   \smallskip\
+   %end{centering}
+   }
+\setbeamertemplate{itemize item}{$\bullet$}
+\setbeamertemplate{footline}[text line]{%
+    \hfill\strut{%
+        \scriptsize\sf\color{black!60}%
+        \quad\insertframenumber
+    }%
+    \hfill
+}
+% Define some colors:
+\definecolor{DarkFern}{HTML}{407428}
+\definecolor{DarkCharcoal}{HTML}{4D4944}
+\colorlet{Fern}{DarkFern!85!white}
+\colorlet{Charcoal}{DarkCharcoal!85!white}
+\colorlet{LightCharcoal}{Charcoal!50!white}
+\colorlet{AlertColor}{orange!80!black}
+\colorlet{DarkRed}{red!70!black}
+\colorlet{DarkBlue}{blue!70!black}
+\colorlet{DarkGreen}{green!70!black}
+
+% Use the colors:
+\setbeamercolor{title}{fg=Fern}
+\setbeamercolor{frametitle}{fg=Fern}
+\setbeamercolor{normal text}{fg=Charcoal}
+\setbeamercolor{block title}{fg=black,bg=Fern!25!white}
+\setbeamercolor{block body}{fg=black,bg=Fern!25!white}
+\setbeamercolor{alerted text}{fg=AlertColor}
+\setbeamercolor{itemize item}{fg=Charcoal}
+\setbeamertemplate{itemize item}{\color{yellow}$\blacksquare$}
+
+\setbeamertemplate{footline}[text line]{%
+  \parbox{\linewidth}{\vspace*{-8pt}Introduction to statistical modelling
+  \hfill\insertshortauthor\hfill\insertshortinstitute\hfill\insertpagenumber}}
+\setbeamertemplate{navigation symbols}{}
+
+%\usetheme{Warsaw}
+%\usecolortheme{spruce}
+%\useoutertheme{infolines} % Alternatively: miniframes, infolines, split
+%\useinnertheme{circles}
+\usepackage{listings}
+\usepackage[labelformat=empty]{caption}
+
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+%===============================================================================
+\title[Intro to statistical modelling with R]{Introduction to statistical modelling with R}
+\author{Conor Goold}
+\institute[Biovit, NMBU]{Faculty of Biosciences, \\ Norwegian University of Life Sciences}
+\date{02/11/2017}
+%===============================================================================
+
+\begin{document}
+
+\frame{\titlepage}
+
+%===============================================================================
+\begin{frame}
+  \frametitle{What we'll avoid}
+  \includegraphics[scale=0.35]{flow_chart_hell}
+\end{frame}
+
+%===============================================================================
+
+\begin{frame}
+  \frametitle{What we'll do instead}
+  Most statistical models have the same mathematical form, which is called the
+  \textbf{linear model (LM)}.\\
+  \vspace{1cm}
+  LMs predict one variable from a linear or additive combination of other variables.
+  \vspace{1cm}
+  \begin{block}{\textbf{Examples}}
+    Height = weight\\
+    Test score = age + sex + social class + ethnicity + ...
+  \end{block}
+\end{frame}
+
+%===============================================================================
+
+\begin{frame}
+\frametitle{Using R}
+\centering
+\includegraphics[scale=0.25]{gswR}
+\end{frame}
+
+%===============================================================================
+
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+%===============================================================================
+\section{Choosing your variables}
+%===============================================================================
+\begin{frame}
+  \frametitle{The goal of statistical modelling}
+Is variation in one variable influenced by variation in other variables? \\ \vspace{1cm}
+\large{\alert{\textbf{Caution}} \\ Most statistical models are not about finding causal relationships}
+\end{frame}
+%===============================================================================
+\begin{frame}
+\frametitle{Response vs. explanatory variables}
+The variable we want to predict variation in is the \textbf{response} variable
+(also known as \textit{dependent} or \textit{predicted} variable).\\
+
+\vspace{1cm}
+
+The variable that we believe explains variation is the \textbf{explanatory} variable
+(also known as \textit{independent} or \textit{predictor} variable).\\
+
+\end{frame}
+%===============================================================================
+\begin{frame}
+\frametitle{Examples}
+\begin{itemize}
+  \item<1-> Test scores and age
+  \item<2-> Number of dog barks and time left alone
+  \item<3-> Caffeine consumption and reaction time
+  \item<4> Seconds taken for a dog to recall and training level
+\end{itemize}
+\vspace{1cm}
+\end{frame}
+%===============================================================================
+\begin{frame}
+\frametitle{Examples}
+\begin{itemize}
+  \item Test scores and age
+  \item Number of dog barks and time left alone
+  \item Caffeine consumption and reaction time
+  \item Seconds taken for a dog to recall and training level
+\end{itemize}
+\vspace{1cm}
+Which variable is the response or explanatory is determined by context/research question.
+\end{frame}
+%===============================================================================
+\begin{frame}
+\frametitle{You may have multiple explanatory variables}
+\begin{itemize}
+  \item Test scores = child age, sex and ethnicity.
+  \item Number of dog barks = time left alone and level of separation anxiety
+\end{itemize}
+\vspace{1cm}
+\begin{alertblock}{Important}
+When we have multiple explanatory variables, we are interested in the \textbf{unique} effects of each variable.
+\end{alertblock}
+\end{frame}
+%===============================================================================
+\section{Identifying the type of variable}
+%===============================================================================
+\begin{frame}
+  \frametitle{Metric, count, ordinal, nominal}
+  \begin{columns}
+    \column{0.4\textwidth}\\
+  \vspace{-2cm}
+  \includegraphics[scale=0.1]{dog_barking}
+
+  \column{0.7\textwidth}
+  \begin{itemize}
+    \item<1-> Duration (seconds) of a bark (\alert{metric})
+    \item<2-> Number of barks in 10 minutes (\alert{count})
+    \item<3-> First, second and third loudest barks (\alert{ordinal})
+    \item<4> Frustrated bark, playful bark, aggressive bark (\alert{nominal})
+  \end{itemize}
+\end{columns}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Metric variables}
+  Metric variables are `continuous' scales, which can have \alert{decimal points}, i.e. they make sense on the real number line. \\ \vspace{0.5cm}
+  \begin{block}{\textbf{Examples}}
+    \begin{itemize}
+      \item Temperature
+      \item Response time
+      \item Height, weight
+    \end{itemize}
+  \end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Count variables}
+  Count variables are a type of metric scale, but are \alert{postive integers} and reflect the number of events in a certain interval (can be converted to proportions). \\ \vspace{0.5cm}
+  \begin{block}{\textbf{Examples}}
+    \begin{itemize}
+      \item Number of animals in an area
+      \item Number of times a behaviour occurs within x minutes
+      \item Number of people voting for different political parties
+    \end{itemize}
+  \end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Ordinal variables}
+  Ordinal variables reflect \alert{order}, although distances between values are not always equal. \\ \vspace{0.5cm}
+  \begin{block}{\textbf{Examples}}
+    \begin{itemize}
+      \item Podium places in a race
+      \item Likert scale responses ("Rate on a scale of 1 to 5 how much you agree with...")
+      \item Order of students by test scores (first, second, third...)
+    \end{itemize}
+  \end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Nominal variables}
+  Nominal variables reflect \alert{different categories with no natural order}. \\ \vspace{0.5cm}
+  \begin{block}{\textbf{Examples}}
+    \begin{itemize}
+      \item Different political parties
+      \item Different colour cars
+      \item Different emotional states
+    \end{itemize}
+  \end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{When using linear models...}
+  We usually apply a linear model appropriate for our response variable type (metric, count, ordinal, nominal).\\
+  \vspace{1cm}
+  If our explanatory variables are metric, count or ordinal, they can usually be treated as the same type of variable in statistical models. If they are nominal, they are treated different.
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Summary so far}
+  \begin{block}{}
+      \begin{itemize}
+        \item Identify response and explanatory variables
+        \item Identify data types
+        \begin{itemize}
+          \item metric, count, ordinal or nominal
+        \end{itemize}
+        \item The same general statistical model can be applied to data of all these types!
+      \end{itemize}
+  \end{block}
+\end{frame}
+%===============================================================================
+\section{The linear model}
+%===============================================================================
+\begin{frame}
+  \frametitle{Linear equation}
+  \begin{centering}
+    $y = \alpha + \beta x$\\
+  \end{centering} \vspace{1cm}
+  \begin{itemize}
+    \item $y$ is the response variable
+    \item $\alpha$ is where the line crosses the y-axis
+    \item $x$ is the explanatory variable
+    \item $\beta$ is the slope coefficient for $x$
+  \end{itemize}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Interpreting linear equations}
+  When $x = 0$, \\ \vspace{0.5cm}
+  \begin{centering}
+  $y = \alpha + \beta \cdot 0$, \\
+  $y = \alpha$. \\ \vspace{0.5cm}
+\end{centering}
+  \textbf{$\alpha$ is the $y$-intercept.}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Interpreting linear equations}
+  $\beta$ is amount of change in $y$ with \textbf{one unit increase} in $x$. \\ \vspace{0.5cm}
+  \begin{block}{\textbf{Example}}
+  If $\alpha = 3$, $\beta = 2$, and $x = 2$ \\ \vspace{0.5cm}
+  \centering
+  $y = \alpha + \beta x = 3 + 2\cdot2 = 7$
+\end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Linear equations}
+  \begin{figure}
+  \includegraphics[scale=0.5]{kruschke_linear_equations}
+  \caption{\tiny{From Kruschke (2014), \textit{Doing Bayesian Data Analysis}}}
+\end{figure}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{What are statistical models?}
+  Statistical models are mathematical machines that produce data.\\
+  Our goal is to `fit' a model that matches our data.
+  \includegraphics[scale=0.3]{pasta_maker}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Why do we need statistical models?}
+  \begin{block}{\textbf{Parameters}}
+    The values for $\alpha$ and $\beta$ (parameters) are \textbf{unknown}
+  \end{block}
+  \begin{enumerate}
+    \item We collect a sample of data from the population
+    \item It's the statistical model's job to find out the most plausible values of those parameters
+  \end{enumerate}
+\end{frame}
+%===============================================================================
+\iffalse
+\begin{frame}
+  \frametitle{Noisy data: regression}
+  We can never predict values 100\%, so statistical models try to understand what happens
+  \alert{\textit{on average}}. \\ \vspace{1cm}
+  There will always be error in our model, which is the difference between the predicted values and the raw data.
+\end{frame}
+\fi
+%===============================================================================
+\begin{frame}
+  \frametitle{Linear regression with normal distributions}
+  \begin{columns}
+    \column{0.5\textwidth}\\
+    \vspace{-1cm}
+  Linear models predict the `central tendency' (e.g. mean) of the data,
+  and how the central tendency changes when predictor variables change. \\
+    \vspace{0.5cm}
+
+  The simplest linear regression uses a \textbf{normal distribution} to describe how the data is distributed around the mean.
+  \column{0.55\textwidth}
+  \includegraphics[scale=0.25]{normal_distribution.png}
+\end{columns}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Linear regression with normal distributions}
+  \centering
+  $y \sim Normal(\mu,\sigma)$ \\\vspace{0.5cm}
+  $\mu = \alpha + \beta x$\vspace{1cm}
+  \begin{block}{\textbf{In English}}
+  $y$ is normally distributed with mean $\mu$ and standard deviation $\sigma$.\\ \vspace{0.5cm}
+  The mean $\mu$ is a linear function of an intercept and the influence of $x$.\\ \vspace{0.5cm}
+  \textbf{$y$ is normally distributed around its mean.}
+\end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}[fragile]
+  \frametitle{Example: hours hunting and age}
+  What's the relationship between hours spent hunting and age? \\ \vspace{1cm}
+  \begin{centering}
+    $hours \sim Normal(\mu, \sigma)$ \\\vspace{0.5cm}
+    $\mu = \alpha + \beta age$ \\\vspace{0.5cm}
+  \end{centering}%
+
+  \begin{lstlisting}
+  lm( hours ~ 1 + age )
+\end{lstlisting}
+
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Linear regression assumptions}
+  \begin{itemize}
+    \item<1-> Response variable is metric (i.e. decimals make sense)
+    \item<2-> Response variable can be both positive and negative
+    \item<3-> Independence of data points
+    \item<4-> Normally distributed \alert{\textbf{residuals}} (difference between the model predictions and the raw data values)
+    \item<5-> Residuals should not depend on the fitted values
+    \item<6> Homogeneity of variance in residuals
+  \end{itemize}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Linear regression assumptions}
+  \begin{figure}
+  \includegraphics[scale=0.5]{linear_reg_dist}
+  \caption{\tiny{From Kruschke (2014), \textit{Doing Bayesian Data Analysis}}}
+\end{figure}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Practical}
+  Fitting a linear regression in R
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Using a nominal explanatory variable}
+  Nominal explanatory variables can also be included in the model by using a system of \alert{dummy variables}. \\ \vspace{1cm}
+  \begin{block}{\textbf{Example}}
+    Imagine a binary explanatory variable $x$, which we code as 0 (for one group) and 1 (for the other group).\\
+    When $x = 0$, \\
+  \begin{centering}
+    $y = \alpha + \beta \cdot 0 = \alpha$ \\
+  \end{centering}
+  When $x = 1$, \\
+\begin{centering}
+  $y = \alpha + \beta \cdot 1$ \\ \vspace{0.5cm}
+  \end{centering}
+  Thus, \alert{$\beta$ is now the estimated difference between the groups.}
+\end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Nominal explanatory variable with $>$ than 2 levels}
+  \begin{block}{\textbf{Example}}
+    Our nominal explanatory var. $x$ has three levels (three groups). We create two new variables:\\ \vspace{0.5cm}
+    \begin{centering}
+      $x_{group2}$ = 1 when an observation is in group 2, 0 otherwise.\\ \vspace{0.5cm}
+      $x_{group3}$ = 1 when an observation is in group 3, 0 otherwise.\\ \vspace{0.5cm}
+    \end{centering}
+    These `dummy variables' always equal the number of levels - 1. The linear model can now be written with two $\beta$ terms:\\ \vspace{0.5cm}
+    \begin{centering}
+      $y = \alpha + \beta_{group2} \cdot x_{group2} + \beta_{group3} \cdot x_{group3}$\\
+    \end{centering}
+\end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Nominal explanatory variable with $>$ than 2 levels}
+  \begin{block}{\textbf{}}
+    When $x_{group2} = 0$ and $x_{group3} = 0$, \\ \vspace{0.5cm}
+  \begin{centering}
+    $y = \alpha + \beta_{group2} \cdot 0 + \beta_{group3} \cdot 0 = \alpha$ \\
+\end{centering} \vspace{0.5cm}
+  When $x_{group2} = 1$ and $x_{group3} = 0$, \\ \vspace{0.5cm}
+\begin{centering}
+  $y = \alpha + \beta_{group2} \cdot 1 + \beta_{group3} \cdot 0 = \alpha + \beta_{group2}$ \\
+\end{centering} \vspace{0.5cm}
+  When $x_{group2} = 0$ and $x_{group3} = 1$, \\ \vspace{0.5cm}
+\begin{centering}
+  $y = \alpha + \beta_{group2} \cdot 0 + \beta_{group3} \cdot 1 = \alpha + \beta_{group3}$ \\
+  \end{centering}
+\end{block}
+\end{frame}%
+%===============================================================================
+\begin{frame}
+  \frametitle{Practical}
+  Fitting a linear regression with nominal explanatory variables in R
+\end{frame}
+%===============================================================================
+\section{Presenting the results}
+%===============================================================================
+\begin{frame}
+  \frametitle{Interpreting results}
+  First, we interpret the parameter estimates for our first linear model. \\ \vspace{1cm}
+  \begin{block}{\textbf{Hours model}}
+    $\alpha = 6.82$; $\beta = 0.0004$ \\ \vspace{0.5cm}
+   ``The number of hours spent hunting when age is 0 is 6.82 and a one year increase in age is associated with a 0.004 increase in the number of hours spent hunting.''
+ \end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Interpreting results}
+  Standard errors tell us about the uncertainty in the parameter estimates,
+  and we can use them to find a 95\% confidence interval. \\ \vspace{1cm}
+  \begin{block}{\textbf{Hours model}}
+    $\alpha$ standard error = 0.13, \\95\% CI = $6.82 \pm 1.96 \cdot 0.13 = [6.57, 7.07]$ \\ \vspace{0.5cm}
+    $\beta$ standard error = 0.003,\\ 95\% CI = $0.0004 \pm 1.96 \cdot 0.003 = [-0.005, 0.006]$
+ \end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Determing the `significance' of our results}
+  Scientists often report the statistical significance of their explanatory variable estimates.
+  We could do this using 95\% CIs (best) or \textit{p}-values (usually need to be less than $0.05$),
+  which are reported in the last column of the model summary. \\ \vspace{1cm}
+
+  \begin{block}{\textbf{Hours model}}
+   ``The effect of age on hours spent hunting was not statistically significant ($\beta$ = 0.0004; SE = 0.003; \textit{p} = 0.892; 95\% CI: [-0.005, 0.006])".
+ \end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{What do p values really mean?}
+  \begin{columns}
+    \column{0.5\textwidth}
+  \textit{P}-values represent the probability of our parameter values (e.g. $\beta$) coming from a distribution of parameter values we would expect to see if the null hypothesis was true (i.e. no effect of our explanatory variable).  \vspace{0.5cm}
+  \column{0.5\textwidth}
+  \includegraphics[scale=0.31]{p_values_curve}
+\end{columns}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Plotting the results}
+  \centering
+  \includegraphics[scale=0.32]{hours_age_reg.png}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Practical}
+  Presenting the results in R.
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Full write up}
+  \begin{block}{}
+    ``The influence of age on hours spent hunting was analysed using a linear regression model, with hours spent hunting as the response variable and age as the explanatory variable. A normal distribution was appropriate for the residuals based on regression diagnoistics (e.g. QQ-plots, residuals vs. fitted plots). The effect of age on hours spent hunting was not statistically significant ($\beta$ = 0.0004; SE = 0.003; \textit{p} = 0.892; 95\% CI: [-0.005, 0.006])."
+  \end{block}
+\end{frame}
+%===============================================================================
+\section{Generalised linear model}
+%===============================================================================
+\begin{frame}
+  \frametitle{Non-normal residuals or non-metric data}
+  The assumptions of the linear model may not be adequate if:
+  \begin{itemize}
+    \item Your response variable is not metric (e.g. is count, ordinal, or nominal)
+    \item The residuals of your model are not normally distributed
+    \item Your response variable is bounded (e.g. cannot be lower than 0)
+  \end{itemize}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Generalised linear models}
+  In these cases, we can apply the \textbf{generalised linear model (GLM)}. It is `generalised' because it generalises the linear model to different types of response variables. \\ \vspace{1cm}
+
+  GLMs convert your response variable onto a linear scale, and then fit a normal linear model as we did before. To interpret the results on the original scales, you must convert the paramter values back to the original scale.
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Logistic regression}
+  \begin{block}{\textbf{Example}}
+    Imagine scan sampling a group of animals, and recording 1 if a particular behaviour is seen or 0 if not. We are interested in how the behaviour changes with time of observation.\\ \vspace{1cm}
+
+    The response variable is a series of 0s and 1s. It no longer makes sense to ask ``How much does the response variable change with each increase in the explanatory variable''. But we can ask ``\textbf{How does the probability of the response variable change with each increase in the explanatory variable?}''
+  \end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Logistic regression}
+  \vspace{-1cm}
+  \begin{figure}
+    \includegraphics[scale=0.5]{logistic_plot}
+  \end{figure}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Logistic regression}
+  \centering
+  $y \sim Bernoulli(p)$ \\\vspace{0.5cm}
+  $logit(p) = \alpha + \beta x$ \\\vspace{0.5cm}
+  where $logit(\mu) = \frac{\mu}{1 - \mu}$\vspace{1cm}
+  \begin{block}{\textbf{In English}}
+    $y$ is distributed as a Bernoulli variable (0s and 1s), with probability $p$. $p$ is mapped to the linear scale using the logit \textbf{link function}, and is predicted by the linear equation $\alpha + \beta x$. To interpret $\alpha$ and $\beta$ on the probability scale, the inverse logit function or logistic function needs to be applied.
+\end{block}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Logistic regression in R}
+  Fitting a logistic model in R.
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Link functions}
+  In GLMs, the underlying linear model is the same but the \alert{residual distribution} and \alert{link function} are just different. You will always find a linear model suitable for your type of response variable! \\ \vspace{1cm}
+
+  Other common types of GLM:
+  \begin{itemize}
+    \item Binary/binomial variable: binomial regression and logit/probit link function
+    \item Count response variable: Poisson regression and log link function
+    \item Right-skewed metric variable: gamma regression with log link function
+    \item Nominal variable $> 2$ categories: multinomial regression with logit/probit link function
+  \end{itemize}
+\end{frame}
+%===============================================================================
+\section{Multiple explanatory variables}
+%===============================================================================
+\begin{frame}
+  \frametitle{Multiple explanatory variables}
+  We can just keep adding terms to a linear model, e.g.\\
+  \vspace{0.5cm}
+  \begin{centering}
+  $y \sim Normal(\mu, \sigma)$ \\  \vspace{0.5cm}
+  $\mu = \alpha + \beta_1x_1 + \beta_2x_2$ \\
+\end{centering}
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{Multiple explanatory variables}
+  We can just keep adding terms to a linear model, e.g.\\ \vspace{0.5cm}
+
+  \begin{centering}
+  $y \sim Normal(\mu, \sigma)$ \\ \vspace{0.5cm}
+  $\mu = \alpha + \beta_1x_1 + \beta_2x_2$ \\
+  \end{centering} \vspace{0.5cm}
+
+  The interpretation of each $\beta$ parameter is the amount of change in the response variable per unit increase in the explanatory variable, \alert{holding all other explanatory variables in the model at 0}.
+\end{frame}
+%===============================================================================
+\section{Multi-level models}
+%===============================================================================
+\begin{frame}
+  \frametitle{Multi-level models}
+  For models with repeated measures on many different groups (e.g. individuals), we may want to account for the correlation within groups by using a \alert{multi-level}, \alert{mixed effect} or \alert{random effects} model. \\ \vspace{0.5cm}
+
+  The simplest multi-level model just includes a separate intercept parameter for each group.
+\end{frame}
+%===============================================================================
+\begin{frame}
+  \frametitle{A simple multi-level model}
+  \begin{centering}
+    $y \sim Normal(\mu, \sigma)$ \\ \vspace{0.5cm}
+    $\mu = \alpha + \nu_j + \beta x$ \\
+  \end{centering} \vspace{1cm}
+  \begin{block}{\textbf{In English}}
+  In this model, there is an extra parameter $\nu$. If we have 2 repeated measurements on 100 individuals, where $j = 1$ to $100$, the $\nu_j$ parameter ensures that each individual has their own intercept parameter, which is a deviation from the group-level intercept $\alpha$. This allows us to detect the variation among individuals as well as account for the lack of independence between data points coming from the same person.
+  \end{block}
+\end{frame}
+%===============================================================================
+\end{document}
